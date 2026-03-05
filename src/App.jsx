@@ -487,8 +487,8 @@ function TypingGame(){
 }
 
 function AimTrainer(){
-  const t=useTheme();const[targets,setTargets]=useState([]);const[score,setScore]=useState(0);const[timeLeft,setTimeLeft]=useState(15);const[playing,setPlaying]=useState(false);const[finalScore,setFinalScore]=useState(null);const containerRef=useRef(null);
-  const spawn=()=>{const container=containerRef.current;if(!container)return;const rect=container.getBoundingClientRect();const x=10+Math.random()*80,y=10+Math.random()*80;setTargets(prev=>[...prev.slice(-4),{id:Date.now()+Math.random(),x,y,size:20+Math.random()*25}])};
+  const t=useTheme();const[targets,setTargets]=useState([]);const[score,setScore]=useState(0);const[timeLeft,setTimeLeft]=useState(15);const[playing,setPlaying]=useState(false);const[finalScore,setFinalScore]=useState(null);
+  const spawn=()=>{const x=10+Math.random()*80,y=10+Math.random()*80;setTargets(prev=>[...prev.slice(-4),{id:Date.now()+Math.random(),x,y,size:20+Math.random()*25}])};
   const startGame=()=>{setScore(0);setTimeLeft(15);setPlaying(true);setFinalScore(null);setTargets([])};
   useEffect(()=>{if(!playing)return;spawn();const si=setInterval(spawn,900);const ti=setInterval(()=>setTimeLeft(v=>{if(v<=1){setPlaying(false);clearInterval(si);clearInterval(ti);return 0}return v-1}),1000);return()=>{clearInterval(si);clearInterval(ti)}},[playing]);
   useEffect(()=>{if(playing||timeLeft===0)setFinalScore(score)},[playing,timeLeft,score]);
