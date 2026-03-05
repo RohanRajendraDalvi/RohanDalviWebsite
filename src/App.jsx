@@ -340,7 +340,13 @@ function SnakeGame() {
       if(key==='ArrowRight' && game.dir.x===0) game.nextDir={x:1,y:0};
     };
 
+    const handleTouchStart = (e) => {
+      e.preventDefault();
+      lastTouchRef.current = {x: e.touches[0].clientX, y: e.touches[0].clientY};
+    };
+
     const handleTouch = (e) => {
+      e.preventDefault();
       const touch = e.touches[0];
       const dx = touch.clientX - lastTouchRef.current.x;
       const dy = touch.clientY - lastTouchRef.current.y;
@@ -356,8 +362,8 @@ function SnakeGame() {
     };
 
     window.addEventListener('keydown', handleKey);
-    canvas.addEventListener('touchstart', e => lastTouchRef.current = {x: e.touches[0].clientX, y: e.touches[0].clientY});
-    canvas.addEventListener('touchmove', handleTouch, {passive:true});
+    canvas.addEventListener('touchstart', handleTouchStart);
+    canvas.addEventListener('touchmove', handleTouch);
     drawGame();
     const i = setInterval(gameLoop, 100);
     return () => { clearInterval(i); window.removeEventListener('keydown', handleKey); };
@@ -389,10 +395,10 @@ function ReactionGame(){
       setRes(r);
       setSt("done");
       if(!best || r<best) setBest(r);
+      if(timeoutRef.current) clearTimeout(timeoutRef.current);
     } else if(st==="ready"){
       if(timeoutRef.current) clearTimeout(timeoutRef.current);
       setSt("early");
-      timeoutRef.current = setTimeout(go, 1500);
     }
   };
 
@@ -487,13 +493,13 @@ function TypingGame(){
 }
 
 function AimTrainer(){
-  const t=useTheme();const[targets,setTargets]=useState([]);const[score,setScore]=useState(0);const[timeLeft,setTimeLeft]=useState(15);const[playing,setPlaying]=useState(false);const[finalScore,setFinalScore]=useState(null);
+  const t=useTheme();const[targets,setTargets]=useState([]);const[score,setScore]=useState(0);const[timeLeft,setTimeLeft]=useState(15);const[playing,setPlaying]=useState(false);const[finalScore,setFinalScore]=useState(null);const containerRef=useRef(null);
   const spawn=()=>{const x=10+Math.random()*80,y=10+Math.random()*80;setTargets(prev=>[...prev.slice(-4),{id:Date.now()+Math.random(),x,y,size:20+Math.random()*25}])};
   const startGame=()=>{setScore(0);setTimeLeft(15);setPlaying(true);setFinalScore(null);setTargets([])};
   useEffect(()=>{if(!playing)return;spawn();const si=setInterval(spawn,900);const ti=setInterval(()=>setTimeLeft(v=>{if(v<=1){setPlaying(false);clearInterval(si);clearInterval(ti);return 0}return v-1}),1000);return()=>{clearInterval(si);clearInterval(ti)}},[playing]);
   useEffect(()=>{if(playing||timeLeft===0)setFinalScore(score)},[playing,timeLeft,score]);
   const hit=id=>{setTargets(p=>p.filter(x=>x.id!==id));setScore(s=>s+1)};
-  return(<div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:12}}>{!playing&&finalScore===null&&<button onClick={startGame} style={{padding:"10px 24px",background:t.green,color:"white",border:"none",borderRadius:12,fontWeight:700,cursor:"pointer"}}>Start (15s)</button>}{playing&&<div style={{display:"flex",justifyContent:"space-between",width:"100%"}}><span style={{color:t.green,fontFamily:"monospace",fontWeight:700}}>Hits: {score}</span><span style={{color:timeLeft<=5?"#ef4444":t.text3,fontFamily:"monospace",fontWeight:700}}>{timeLeft}s</span></div>}{(playing||finalScore!==null)&&<div style={{width:"100%",height:260,background:t.canvasBg,borderRadius:16,border:`2px solid ${t.gameBorder}`,position:"relative",overflow:"hidden"}}>{targets.map(x=>(<div key={x.id} onClick={()=>hit(x.id)} style={{position:"absolute",left:`${x.x}%`,top:`${x.y}%`,width:x.size,height:x.size,borderRadius:"50%",background:`linear-gradient(135deg, ${t.green}, ${t.greenLight})`,cursor:"crosshair",boxShadow:`0 2px 8px ${t.green}44`}}/>))}{finalScore!==null&&<div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",background:t.bg+"ee"}}><p style={{fontSize:36,fontWeight:800,color:t.green}}>{finalScore}</p><p style={{color:t.text3,fontSize:14}}>targets hit</p><button onClick={startGame} style={{marginTop:12,padding:"8px 20px",background:t.green,color:"white",border:"none",borderRadius:10,fontWeight:700,fontSize:13,cursor:"pointer"}}>Play Again</button></div>}</div>}</div>);
+  return(<div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:12}}>{!playing&&finalScore===null&&<button onClick={startGame} style={{padding:"10px 24px",background:t.green,color:"white",border:"none",borderRadius:12,fontWeight:700,cursor:"pointer"}}>Start (15s)</button>}{playing&&<div style={{display:"flex",justifyContent:"space-between",width:"100%"}}><span style={{color:t.green,fontFamily:"monospace",fontWeight:700}}>Hits: {score}</span><span style={{color:timeLeft<=5?"#ef4444":t.text3,fontFamily:"monospace",fontWeight:700}}>{timeLeft}s</span></div>}{(playing||finalScore!==null)&&<div ref={containerRef} style={{width:"100%",height:260,background:t.canvasBg,borderRadius:16,border:`2px solid ${t.gameBorder}`,position:"relative",overflow:"hidden"}}>{targets.map(x=>(<div key={x.id} onClick={()=>hit(x.id)} style={{position:"absolute",left:`${x.x}%`,top:`${x.y}%`,width:x.size,height:x.size,borderRadius:"50%",background:`linear-gradient(135deg, ${t.green}, ${t.greenLight})`,cursor:"crosshair",boxShadow:`0 2px 8px ${t.green}44`}}/>))}{finalScore!==null&&<div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",background:t.bg+"ee"}}><p style={{fontSize:36,fontWeight:800,color:t.green}}>{finalScore}</p><p style={{color:t.text3,fontSize:14}}>targets hit</p><button onClick={startGame} style={{marginTop:12,padding:"8px 20px",background:t.green,color:"white",border:"none",borderRadius:10,fontWeight:700,fontSize:13,cursor:"pointer"}}>Play Again</button></div>}</div>}</div>);
 }
 function ColorMatch(){
   const t=useTheme();
