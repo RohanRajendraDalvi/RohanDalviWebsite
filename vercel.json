@@ -1,0 +1,16 @@
+{
+  "buildCommand": "npm run build",
+  "devCommand": "npm start",
+  "installCommand": "npm install",
+  "framework": "create-react-app",
+  "env": {
+    "REACT_APP_EMAILJS_PUBLIC_KEY": "@emailjs_public_key",
+    "REACT_APP_EMAILJS_SERVICE_ID": "@emailjs_service_id",
+    "REACT_APP_EMAILJS_TEMPLATE_ID": "@emailjs_template_id"
+  },
+  "git": {
+    "deploymentEnabled": {
+      "main": true
+    }
+  }
+}
