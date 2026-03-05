@@ -2,7 +2,7 @@
 
 A modern, responsive portfolio website built with React featuring an interactive skills matcher, project showcase, mini games, and a functional contact form with EmailJS integration.
 
-**Live Demo:** [Coming Soon on Vercel]
+**Live Demo:** https://rohandalvi.netlify.app/
 
 **Features:**
 - ✅ Fully responsive design (mobile-first)

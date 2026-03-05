@@ -103,10 +103,10 @@ const EDUCATION = [
 const PROJECTS = [
   { title: "FROST — Slip Tracking", desc: "CMT award-winning React Native + Firebase app combining computer vision, spatiotemporal decay, weather multipliers for real-time winter road slip probabilities.", tags: ["React Native","Firebase","CV"], link: "https://github.com/RohanRajendraDalvi/CMT-winners" },
   { title: "Meet'N'Treat", desc: "iOS app for scheduling pet interactions — 'Airbnb for pet meetups' — with real-time DB, maps, and Firebase auth.", tags: ["Swift","Firebase","MapKit"], link: "https://github.com/RohanRajendraDalvi/MeetNTreat-New" },
-  { title: "Xander Glasses AR", desc: "Reduced AR device test cycles from 1 year to 1.5 months through automation with Kotlin, Docker, and GPU APIs.", tags: ["Kotlin","C","Docker"], link: "https://www.xanderglasses.com/xanderglasses" },
   { title: "Cine-Bot", desc: "Conversational movie search over 50K+ records with multi-LLM backend using FAISS and ChromaDB for semantic retrieval.", tags: ["React","Flask","FAISS"], link: "https://github.com/Mansi142000/NLP-Project" },
   { title: "HiringTek WebRTC", desc: "Scaled to 700 concurrent video sessions at $0.30/interview-hour. Published research chapter (Francis & Taylor).", tags: ["Angular","Socket.io","AWS"], link: "https://www.taylorfrancis.com/chapters/edit/10.1201/9781003440901-12/revamping-hiring-process-using-webrtc-aws-cloud-gaze-tracking-application-megharani-patil-rohan-rajendra-dalvi-faraz-hussain-suyog-gupta?context=ubx&refId=018d159d-21f4-4cd4-bb0f-fc2f7edbf423" },
   { title: "Yoga AI", desc: "Browser-based yoga pose classifier with 90% accuracy and real-time visual feedback via TensorFlow.js.", tags: ["TensorFlow.js","HTML5","JS"], link: "https://yogai.onrender.com/" },
+  { title: "Craft Digital Cards", desc: "3D business card creator with React + Three.js — interactive drag-to-rotate cards, 14 theme variants, AI resume import, WebP compression, and real-time Firestore sync.", tags: ["React 18","Three.js","Firebase"], link: "https://craftdigitalcards.vercel.app/" },
 ];
 
 const ACHIEVEMENTS = [
@@ -285,6 +285,7 @@ function SnakeGame() {
   const [score,setScore]=useState(0);
   const [over,setOver]=useState(false);
   const CELL=16, W=25, H=18;
+  const lastTouchRef = useRef({x:0, y:0});
 
   const reset=()=>{
     gameRef.current = { snake:[{x:10,y:10}], dir:{x:1,y:0}, food:{x:15,y:15}, score:0, running:true, nextDir:{x:1,y:0} };
@@ -339,7 +340,24 @@ function SnakeGame() {
       if(key==='ArrowRight' && game.dir.x===0) game.nextDir={x:1,y:0};
     };
 
+    const handleTouch = (e) => {
+      const touch = e.touches[0];
+      const dx = touch.clientX - lastTouchRef.current.x;
+      const dy = touch.clientY - lastTouchRef.current.y;
+      lastTouchRef.current = {x: touch.clientX, y: touch.clientY};
+      
+      if(Math.abs(dx) > Math.abs(dy)) {
+        if(dx > 0 && game.dir.x===0) game.nextDir={x:1,y:0};
+        if(dx < 0 && game.dir.x===0) game.nextDir={x:-1,y:0};
+      } else {
+        if(dy > 0 && game.dir.y===0) game.nextDir={x:0,y:1};
+        if(dy < 0 && game.dir.y===0) game.nextDir={x:0,y:-1};
+      }
+    };
+
     window.addEventListener('keydown', handleKey);
+    canvas.addEventListener('touchstart', e => lastTouchRef.current = {x: e.touches[0].clientX, y: e.touches[0].clientY});
+    canvas.addEventListener('touchmove', handleTouch, {passive:true});
     drawGame();
     const i = setInterval(gameLoop, 100);
     return () => { clearInterval(i); window.removeEventListener('keydown', handleKey); };
@@ -351,12 +369,14 @@ function SnakeGame() {
 function ReactionGame(){
   const t=useTheme();
   const[st,setSt]=useState("waiting");const[t0,setT0]=useState(0);const[res,setRes]=useState(0);const[best,setBest]=useState(null);
+  const timeoutRef = useRef(null);
 
   const go=()=>{
+    if(timeoutRef.current) clearTimeout(timeoutRef.current);
     setSt("waiting");
-    setTimeout(() => {
+    timeoutRef.current = setTimeout(() => {
       setSt("ready");
-      setTimeout(() => {
+      timeoutRef.current = setTimeout(() => {
         setSt("go");
         setT0(Date.now());
       }, Math.random()*2000+1000);
@@ -370,12 +390,18 @@ function ReactionGame(){
       setSt("done");
       if(!best || r<best) setBest(r);
     } else if(st==="ready"){
+      if(timeoutRef.current) clearTimeout(timeoutRef.current);
       setSt("early");
-      setTimeout(go, 1500);
+      timeoutRef.current = setTimeout(go, 1500);
     }
   };
 
-  useEffect(go, []);
+  useEffect(() => {
+    go();
+    return () => {
+      if(timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, []);
 
   const bg={waiting:t.reactionWait,ready:t.reactionReady,go:t.reactionGo,early:t.reactionEarly,done:t.reactionWait};
   const msg={waiting:"Click Start",ready:"Wait for green...",go:"CLICK NOW!",early:"Too early!",done:`${res}ms${best===res?" — Best!":""}`};
@@ -461,8 +487,8 @@ function TypingGame(){
 }
 
 function AimTrainer(){
-  const t=useTheme();const[targets,setTargets]=useState([]);const[score,setScore]=useState(0);const[timeLeft,setTimeLeft]=useState(15);const[playing,setPlaying]=useState(false);const[finalScore,setFinalScore]=useState(null);
-  const spawn=()=>{setTargets(prev=>[...prev.slice(-4),{id:Date.now()+Math.random(),x:10+Math.random()*80,y:10+Math.random()*80,size:20+Math.random()*25}])};
+  const t=useTheme();const[targets,setTargets]=useState([]);const[score,setScore]=useState(0);const[timeLeft,setTimeLeft]=useState(15);const[playing,setPlaying]=useState(false);const[finalScore,setFinalScore]=useState(null);const containerRef=useRef(null);
+  const spawn=()=>{const container=containerRef.current;if(!container)return;const rect=container.getBoundingClientRect();const x=10+Math.random()*80,y=10+Math.random()*80;setTargets(prev=>[...prev.slice(-4),{id:Date.now()+Math.random(),x,y,size:20+Math.random()*25}])};
   const startGame=()=>{setScore(0);setTimeLeft(15);setPlaying(true);setFinalScore(null);setTargets([])};
   useEffect(()=>{if(!playing)return;spawn();const si=setInterval(spawn,900);const ti=setInterval(()=>setTimeLeft(v=>{if(v<=1){setPlaying(false);clearInterval(si);clearInterval(ti);return 0}return v-1}),1000);return()=>{clearInterval(si);clearInterval(ti)}},[playing]);
   useEffect(()=>{if(playing||timeLeft===0)setFinalScore(score)},[playing,timeLeft,score]);
